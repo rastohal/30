@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7-Day Food Tracker</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 20px;
+      background: #f8fafc;
+      color: #111;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 1rem;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1e40af;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #fff;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>7-Day Food Tracker</h1>
+  <input type="text" id="foodInput" placeholder="Enter fruit/vegetable/seed">
+  <button onclick="addFood()">Add</button>
+  <ul id="foodList"></ul>
+
+  <script>
+    const STORAGE_KEY = "foodTrackerData";
+
+    function loadData() {
+      let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      // remove old entries
+      const now = Date.now();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      for (let key in data) {
+        if (now - data[key] > sevenDays) {
+          delete data[key];
+        }
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      return data;
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function renderList() {
+      const data = loadData();
+      const list = document.getElementById("foodList");
+      list.innerHTML = "";
+      let count = 1;
+      for (let item in data) {
+        const li = document.createElement("li");
+        li.textContent = `${count}. ${item}`;
+        list.appendChild(li);
+        count++;
+      }
+    }
+
+    function addFood() {
+      const input = document.getElementById("foodInput");
+      const value = input.value.trim();
+      if (!value) return;
+
+      let data = loadData();
+      // update timestamp if exists, else add
+      data[value] = Date.now();
+      saveData(data);
+
+      input.value = "";
+      renderList();
+    }
+
+    // initial render
+    renderList();
+  </script>
+</body>
+</html>
