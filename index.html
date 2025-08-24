@@ -28,12 +28,29 @@
     button:hover { background: #1e40af; }
     ul { list-style: none; padding: 0; }
     li {
-      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin: 5px 0;
       padding: 10px;
       border-radius: 6px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      color: white;
+      font-weight: 500;
     }
+    .item-buttons {
+      display: flex;
+      gap: 6px;
+    }
+    .delete-btn, .refresh-btn {
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px 8px;
+    }
+    .delete-btn { background: #dc2626; color: white; }
+    .refresh-btn { background: #16a34a; color: white; }
     .highlight { font-weight: bold; }
   </style>
 </head>
@@ -63,6 +80,17 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
 
+    function daysOld(timestamp) {
+      const now = Date.now();
+      return Math.floor((now - timestamp) / (24*60*60*1000));
+    }
+
+    function getColorByAge(age) {
+      // age 0 = green (120), age 6 = red (0)
+      const hue = Math.max(0, 120 - age * 20);
+      return `hsl(${hue}, 70%, 50%)`;
+    }
+
     function renderList() {
       const data = loadData();
       const list = document.getElementById("foodList");
@@ -70,7 +98,41 @@
       let items = Object.keys(data).sort((a, b) => a.localeCompare(b));
       items.forEach((item, index) => {
         const li = document.createElement("li");
-        li.textContent = `${index + 1}. ${item}`;
+
+        const age = daysOld(data[item]);
+        li.style.backgroundColor = getColorByAge(age);
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = `${index + 1}. ${item}`;
+
+        const btns = document.createElement("div");
+        btns.classList.add("item-buttons");
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "❌";
+        delBtn.classList.add("delete-btn");
+        delBtn.onclick = () => {
+          let d = loadData();
+          delete d[item];
+          saveData(d);
+          renderList();
+        };
+
+        const refreshBtn = document.createElement("button");
+        refreshBtn.textContent = "✅";
+        refreshBtn.classList.add("refresh-btn");
+        refreshBtn.onclick = () => {
+          let d = loadData();
+          d[item] = Date.now();
+          saveData(d);
+          renderList();
+        };
+
+        btns.appendChild(refreshBtn);
+        btns.appendChild(delBtn);
+
+        li.appendChild(textSpan);
+        li.appendChild(btns);
         list.appendChild(li);
       });
     }
@@ -92,32 +154,28 @@
       const input = document.getElementById("foodInput");
       const value = input.value.trim().toLowerCase();
       const data = loadData();
-      const list = document.getElementById("foodList");
       const items = Object.keys(data);
 
-      // reset list
       renderList();
 
       if (!value) return;
 
-      // find matches
       const matches = items.filter(item => item.toLowerCase().startsWith(value));
 
       if (matches.length > 0) {
+        const list = document.getElementById("foodList");
         list.querySelectorAll("li").forEach(li => {
           matches.forEach(match => {
             if (li.textContent.toLowerCase().includes(match.toLowerCase())) {
-              let name = match;
-              let boldPart = name.substring(0, value.length);
-              let rest = name.substring(value.length);
-              li.innerHTML = `${[...items].sort().indexOf(match) + 1}. <span class="highlight">${boldPart}</span>${rest}`;
+              let boldPart = match.substring(0, value.length);
+              let rest = match.substring(value.length);
+              li.firstChild.innerHTML = `${[...items].sort().indexOf(match) + 1}. <span class="highlight">${boldPart}</span>${rest}`;
             }
           });
         });
       }
     }
 
-    // register service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("service-worker.js");
     }
