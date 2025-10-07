@@ -1,521 +1,242 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>7-Day Food Tracker — v2</title>
-  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7-Day Food Tracker</title>
+  <link rel="manifest" href="manifest.json" />
   <style>
-    :root{
-      --bg: #fbfbfb;
-      --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      --muted: #6b6b6b;
-      --gray-old: #9aa0a6; /* jednolity odtien pre >7 dní */
-    }
-    html,body{height:100%}
     body {
-      margin:16px;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: var(--bg);
-      color: #111827;
-    }
-    h1 {font-size:1.25rem;margin:0 0 12px 0}
-    .controls {
-      display:flex;
-      gap:8px;
-      align-items:center;
-      margin-bottom:8px;
-    }
-    #foodInput {
-      flex:1;
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid #e5e7eb;
-      font-size:1rem;
-      background:white;
-    }
-    #addBtn {
-      padding:10px 12px;
-      border-radius:10px;
-      border:none;
-      background:#111827;
-      color:white;
-      font-weight:600;
-      cursor:pointer;
-    }
-    #addBtn:active{transform:translateY(1px)}
-    .suggestions {
-      position:relative;
-    }
-    .dropdown {
-      position:absolute;
-      top:44px;
-      left:0;
-      right:0;
-      background:white;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      box-shadow: var(--card-shadow);
-      max-height:180px;
-      overflow:auto;
-      z-index:50;
-    }
-    .dropdown-item {
-      padding:8px 10px;
-      font-size:0.98rem;
-      cursor:pointer;
-    }
-    .dropdown-item:hover {background:#f3f4f6}
-    .list {
-      margin-top:12px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .item {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      padding:10px;
-      border-radius:10px;
-      box-shadow: var(--card-shadow);
-      color: white;
-      font-weight:600;
-    }
-    .item .left {
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-    .item .name { font-size:1rem }
-    .item .meta { font-size:0.85rem; opacity:0.9; font-weight:500 }
-    .item .actions { display:flex; gap:8px }
-    .icon-btn {
-      border:none;
-      background:transparent;
-      padding:6px 8px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:1rem;
-      color: rgba(255,255,255,0.95); /* keep icons neutral on colored rows */
-    }
-    /* neutral icons on colored rows (we keep them white or slightly transparent) */
-    .icon-btn--neutral { color: rgba(255,255,255,0.95); }
-
-    /* layout for footer */
-    .footer {
-      margin-top:16px;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:8px;
-      flex-direction:column;
-    }
-    #exportBtn {
-      margin-top:8px;
-      padding:10px 14px;
-      border-radius:10px;
-      border:none;
-      background:#111827;
-      color:white;
-      font-weight:600;
-      cursor:pointer;
-    }
-    /* small helper */
-    .section-title {
-      margin-top:14px;
-      margin-bottom:6px;
-      font-size:0.95rem;
-      color:var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 1.2em;
+      background: #f8f6f2;
+      color: #333;
     }
 
-    /* highlighted part in input suggestions (bold) */
-    .match-bold { font-weight:700; }
+    h1 {
+      text-align: center;
+      font-size: 1.5em;
+      margin-bottom: 1em;
+      color: #442f1f;
+    }
 
-    /* responsive tiny */
-    @media (max-width:420px){
-      body { margin:12px }
-      .controls { gap:6px }
+    input {
+      width: 100%;
+      padding: 0.6em;
+      font-size: 1em;
+      border: 2px solid #c7b89e;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 1em;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6em 0.8em;
+      border-radius: 8px;
+      margin-bottom: 0.5em;
+      color: #fff;
+    }
+
+    .item-buttons button {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #555;
+      margin-left: 0.4em;
+    }
+
+    .export-btn {
+      margin-top: 1.5em;
+      width: 100%;
+      padding: 0.8em;
+      font-size: 1em;
+      background: #806952;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .export-btn:hover {
+      background: #6a5742;
+    }
+
+    /* farebná paleta: jesenné tóny */
+    .day-0 { background-color: #557d4b; } /* zelená */
+    .day-1 { background-color: #7c8c3e; }
+    .day-2 { background-color: #a38e38; }
+    .day-3 { background-color: #bf843b; }
+    .day-4 { background-color: #c76d3b; }
+    .day-5 { background-color: #b6543d; }
+    .day-6 { background-color: #8c3b37; }
+    .day-7 { background-color: #733039; } /* bordová */
+    .old-item { background-color: #bfbfbf; color: #333; }
+
+    /* autocomplete dropdown */
+    .autocomplete-list {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.2em;
+      position: absolute;
+      width: calc(100% - 2.4em);
+      z-index: 1000;
+    }
+
+    .autocomplete-item {
+      padding: 0.5em;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background: #eee;
     }
   </style>
 </head>
 <body>
   <h1>7-Day Food Tracker</h1>
+  <input id="foodInput" type="text" placeholder="Zadaj potravinu..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+  <div id="autocomplete" class="autocomplete-list" style="display:none;"></div>
+  <ul id="foodList"></ul>
+  <button id="exportBtn" class="export-btn">Export CSV</button>
 
-  <div class="controls">
-    <div style="flex:1; position:relative;">
-      <input id="foodInput" type="text" inputmode="text" placeholder="Zadaj ovocie/zeleninu/semienko..."  autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
-      <div id="suggestions" class="dropdown" style="display:none"></div>
-    </div>
-    <button id="addBtn">Pridať</button>
-  </div>
+  <script>
+    const input = document.getElementById('foodInput');
+    const list = document.getElementById('foodList');
+    const autocomplete = document.getElementById('autocomplete');
+    const exportBtn = document.getElementById('exportBtn');
+    const STORAGE_KEY = 'foodTrackerData';
 
-  <div id="counts" style="font-size:0.95rem;color:#475569;margin-bottom:6px;"></div>
+    // fix pre iOS PWA klávesnicu
+    input.addEventListener('touchend', function(e) {
+      this.focus();
+      e.stopPropagation();
+    }, false);
 
-  <div class="list" id="foodList"></div>
+    let foods = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-  <div class="footer">
-    <div class="section-title">Export / záloha</div>
-    <button id="exportBtn">Export CSV</button>
-  </div>
-
-<script>
-/*
- Storage schema (per item):
-  foodTrackerData = {
-    "Apple": { latest: 1690000000000, first: 1690000000000, days: ["2023-07-10","2023-07-11", ...] },
-    ...
-  }
- - Legacy format (previous versions): value was a number timestamp. This code migrates that.
-*/
-
-const STORAGE_KEY = "foodTrackerData";
-const MS_DAY = 24*60*60*1000;
-
-/* --- UTILS --- */
-function todayDateStr(ts = Date.now()){
-  const d = new Date(ts);
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-function daysBetween(ts){
-  return Math.floor((Date.now() - ts)/MS_DAY);
-}
-
-/* load and migrate if needed */
-function loadData(){
-  let raw = localStorage.getItem(STORAGE_KEY);
-  let data = {};
-  if(raw) {
-    try {
-      data = JSON.parse(raw) || {};
-    } catch(e) {
-      data = {};
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(foods));
     }
-  }
-  // migrate legacy entries where value is number (timestamp)
-  let changed = false;
-  for(const key of Object.keys(data)) {
-    const v = data[key];
-    if(typeof v === "number") {
-      const ts = v;
-      data[key] = {
-        latest: ts,
-        first: ts,
-        days: [ todayDateStr(ts) ]
-      };
-      changed = true;
-    } else if (v && v.latest && v.days && Array.isArray(v.days) && v.first) {
-      // already new format, ok
-    } else {
-      // defensive: if object missing fields, normalize
-      const ts = (v && v.latest) ? v.latest : Date.now();
-      const first = (v && v.first) ? v.first : ts;
-      const days = (v && v.days && Array.isArray(v.days) && v.days.length>0) ? v.days : [todayDateStr(ts)];
-      data[key] = { latest: ts, first: first, days: [...new Set(days)] };
-      changed = true;
+
+    function addFood(name) {
+      const now = new Date().getTime();
+      if (foods[name]) {
+        foods[name].last = now;
+        foods[name].days.add(new Date().toDateString());
+      } else {
+        foods[name] = { first: now, last: now, days: new Set([new Date().toDateString()]) };
+      }
+      saveData();
+      renderList();
     }
-  }
-  if(changed) saveData(data);
-  // also remove very old items? no — we keep >7 days but mark grey per your request
-  return data;
-}
 
-function saveData(data){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-/* case-insensitive find key (so "Apple" and "apple" are same) */
-function findKeyByName(data, name){
-  const low = name.trim().toLowerCase();
-  for(const k of Object.keys(data)){
-    if(k.toLowerCase() === low) return k;
-  }
-  return null;
-}
-
-/* add or refresh item (when adding by input); merges case-insensitively */
-function addOrRefreshItem(rawName){
-  const name = rawName.trim();
-  if(!name) return;
-  let data = loadData();
-  const existingKey = findKeyByName(data, name);
-  const now = Date.now();
-  const today = todayDateStr(now);
-  if(existingKey){
-    // update existing
-    const item = data[existingKey];
-    item.latest = now;
-    if(!item.days.includes(today)) item.days.push(today);
-    // keep first as is
-    data[existingKey] = item;
-  } else {
-    // new item
-    data[name] = { latest: now, first: now, days: [today] };
-  }
-  saveData(data);
-  renderAll();
-}
-
-/* delete item */
-function deleteItem(name){
-  let data = loadData();
-  delete data[name];
-  saveData(data);
-  renderAll();
-}
-
-/* refresh timestamp (green tick) */
-function refreshItem(name){
-  let data = loadData();
-  const now = Date.now();
-  const today = todayDateStr(now);
-  if(!data[name]) return;
-  data[name].latest = now;
-  if(!data[name].days.includes(today)) data[name].days.push(today);
-  saveData(data);
-  renderAll();
-}
-
-/* color palette: autumn gradient from green (0 days) to burgundy (7 days)
-   We'll compute HSL interpolation between two hues and also reduce saturation/lightness for warmer feel.
-   For ages >7 return single gray.
-*/
-function colorForAge(age){
-  if(age > 7) return 'hsl(0, 0%, 70%)'; // grey for >7 days (single shade)
-  // define color anchors for nicer autumn palette:
-  // age 0 -> fresh green (hsl 110, 55%, 40%)
-  // age 3 -> warm yellow/orange (hsl 35, 55%, 45%)
-  // age 7 -> deep burgundy (hsl 345, 50%, 30%)
-  // We'll map age 0..7 to a smooth curve using piecewise interpolation:
-  const t = age / 7;
-  // Simple approach: interpolate hue across chosen stops for warmer autumn tones
-  // We'll use three stops and linear interpolate in segments
-  const stops = [
-    {pos:0, h:110, s:55, l:40},
-    {pos:0.45, h:35, s:55, l:44},
-    {pos:1, h:345, s:50, l:32}
-  ];
-  let left = stops[0], right = stops[stops.length-1];
-  for(let i=0;i<stops.length-1;i++){
-    if(t >= stops[i].pos && t <= stops[i+1].pos){
-      left = stops[i];
-      right = stops[i+1];
-      const localT = (t - left.pos) / (right.pos - left.pos);
-      const h = Math.round(left.h + (right.h - left.h) * localT);
-      const s = Math.round(left.s + (right.s - left.s) * localT);
-      const l = Math.round(left.l + (right.l - left.l) * localT);
-      return `hsl(${h}, ${s}%, ${l}%)`;
+    function deleteFood(name) {
+      delete foods[name];
+      saveData();
+      renderList();
     }
-  }
-  // fallback
-  return `hsl(${Math.round(110 + (345-110)*t)},55%,40%)`;
-}
 
-/* render logic:
-   - produce two arrays: coloredItems (age <=7) and greyItems (age >7)
-   - both sorted alphabetically within themselves
-   - show counts summary
-*/
-function renderAll(){
-  const data = loadData();
-  const now = Date.now();
-  const items = Object.keys(data);
-  // build array of objects
-  const arr = items.map(name => {
-    const entry = data[name];
-    const age = Math.floor((now - entry.latest) / MS_DAY);
-    return { name, age, entry };
-  });
-  const colored = arr.filter(i => i.age <= 7).sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
-  const grey = arr.filter(i => i.age > 7).sort((a,b)=>a.name.localeCompare(b.name, undefined, {sensitivity:'base'}));
+    function refreshFood(name) {
+      foods[name].last = new Date().getTime();
+      foods[name].days.add(new Date().toDateString());
+      saveData();
+      renderList();
+    }
 
-  const listEl = document.getElementById('foodList');
-  listEl.innerHTML = '';
+    function daysAgo(timestamp) {
+      return Math.floor((new Date().getTime() - timestamp) / (1000*60*60*24));
+    }
 
-  // counts summary
-  const counts = document.getElementById('counts');
-  counts.textContent = `Farebných položiek (≤7 dní): ${colored.length} · Starých položiek (>7 dní): ${grey.length}`;
+    function renderList() {
+      const entries = Object.entries(foods).map(([name, data]) => ({
+        name,
+        first: data.first,
+        last: data.last,
+        days: Array.from(data.days)
+      }));
 
-  // helper to create item element
-  function createItemObj(obj, indexInSection){
-    const wrapper = document.createElement('div');
-    wrapper.className = 'item';
+      const fresh = entries.filter(e => daysAgo(e.last) <= 7)
+        .sort((a,b)=>a.name.localeCompare(b.name));
+      const old = entries.filter(e => daysAgo(e.last) > 7)
+        .sort((a,b)=>a.name.localeCompare(b.name));
 
-    // background color
-    const color = (obj.age > 7) ? 'hsl(210,4%,82%)' /* slightly different grey background for better contrast */ : colorForAge(obj.age);
-    wrapper.style.background = color;
-    // left part: number + name + small meta
-    const left = document.createElement('div');
-    left.className = 'left';
-    const nameSpan = document.createElement('div');
-    nameSpan.className = 'name';
-    nameSpan.innerHTML = `${indexInSection + 1}. ${escapeHtml(obj.name)}`;
+      list.innerHTML = '';
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-    // meta example: "prvýkrát pred X dňami · zjedené Y dní"
-    const firstDaysAgo = Math.floor((Date.now() - obj.entry.first) / MS_DAY);
-    const daysCount = obj.entry.days ? obj.entry.days.length : 0;
-    meta.textContent = `prvýkrát pred ${firstDaysAgo} dňami · zjedené ${daysCount} dní`;
-    left.appendChild(nameSpan);
-    left.appendChild(meta);
+      [...fresh, ...old].forEach(item => {
+        const diff = daysAgo(item.last);
+        const li = document.createElement('li');
+        li.className = diff <= 7 ? `day-${diff}` : 'old-item';
+        li.innerHTML = `
+          <span>${item.name}</span>
+          <span class="item-buttons">
+            <button onclick="refreshFood('${item.name}')">✅</button>
+            <button onclick="deleteFood('${item.name}')">❌</button>
+          </span>
+        `;
+        list.appendChild(li);
+      });
+    }
 
-    // actions
-    const actions = document.createElement('div');
-    actions.className = 'actions';
-
-    const refreshBtn = document.createElement('button');
-    refreshBtn.className = 'icon-btn icon-btn--neutral';
-    refreshBtn.title = 'Obnoviť na dnes';
-    refreshBtn.innerText = '✅';
-    refreshBtn.onclick = (e) => { e.stopPropagation(); refreshItem(obj.name); };
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'icon-btn icon-btn--neutral';
-    delBtn.title = 'Vymazať';
-    delBtn.innerText = '❌';
-    delBtn.onclick = (e) => { e.stopPropagation(); if(confirm(`Vymazať "${obj.name}"?`)){ deleteItem(obj.name); } };
-
-    actions.appendChild(refreshBtn);
-    actions.appendChild(delBtn);
-
-    wrapper.appendChild(left);
-    wrapper.appendChild(actions);
-
-    return wrapper;
-  }
-
-  // render colored with title
-  if(colored.length > 0){
-    colored.forEach((it, idx) => {
-      const el = createItemObj(it, idx);
-      listEl.appendChild(el);
+    input.addEventListener('input', e => {
+      const val = e.target.value.toLowerCase();
+      if (!val) {
+        autocomplete.style.display = 'none';
+        return;
+      }
+      const matches = Object.keys(foods).filter(f => f.toLowerCase().startsWith(val));
+      if (matches.length === 0) {
+        autocomplete.style.display = 'none';
+      } else {
+        autocomplete.innerHTML = matches.map(m => `<div class="autocomplete-item">${m}</div>`).join('');
+        autocomplete.style.display = 'block';
+        document.querySelectorAll('.autocomplete-item').forEach(item => {
+          item.onclick = () => {
+            input.value = item.textContent;
+            autocomplete.style.display = 'none';
+            addFood(item.textContent);
+            input.value = '';
+          };
+        });
+      }
     });
-  }
 
-  // render grey separator (if any)
-  if(grey.length > 0){
-    // small spacer
-    const sep = document.createElement('div');
-    sep.style.height = '8px';
-    listEl.appendChild(sep);
-    grey.forEach((it, idx) => {
-      const el = createItemObj(it, idx);
-      // grey rows should have white text? We'll make text dark to read on light grey background:
-      el.style.color = '#1f2937';
-      el.querySelectorAll('.icon-btn').forEach(b=>b.style.color='#374151');
-      listEl.appendChild(el);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        addFood(input.value.trim());
+        input.value = '';
+        autocomplete.style.display = 'none';
+      }
     });
-  }
-}
 
-/* --- SUGGESTIONS (autocomplete with dropdown) --- */
-const inputEl = document.getElementById('foodInput');
-const suggestionsEl = document.getElementById('suggestions');
+    exportBtn.addEventListener('click', () => {
+      const all = Object.entries(foods).map(([name, data]) => {
+        const totalDays = data.days.size;
+        const firstAgo = daysAgo(data.first);
+        return `${name},${totalDays},${firstAgo}`;
+      }).join('\n');
+      const csv = 'nazov_potraviny,pocet_dni_kedy_bola_jedena,pred_kolkymi_dnami_bola_prvy_raz_jedena\n' + all;
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'foodtracker_export.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
-inputEl.addEventListener('input', onInputChanged);
-inputEl.addEventListener('keydown', onInputKeyDown);
-
-function onInputChanged(){
-  const val = inputEl.value.trim().toLowerCase();
-  if(!val){
-    suggestionsEl.style.display = 'none'; suggestionsEl.innerHTML = ''; return;
-  }
-  const data = loadData();
-  const all = Object.keys(data).sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}));
-  const matches = all.filter(name => name.toLowerCase().startsWith(val));
-  if(matches.length === 0){ suggestionsEl.style.display='none'; suggestionsEl.innerHTML=''; return;}
-  suggestionsEl.innerHTML = '';
-  matches.forEach(m=>{
-    const item = document.createElement('div');
-    item.className = 'dropdown-item';
-    const boldPart = `<span class="match-bold">${escapeHtml(m.substring(0,val.length))}</span>`;
-    const rest = escapeHtml(m.substring(val.length));
-    item.innerHTML = `${boldPart}${rest}`;
-    item.onclick = () => {
-      // on click, fill input and hide dropdown
-      inputEl.value = m;
-      suggestionsEl.style.display='none';
-      inputEl.focus();
-    };
-    suggestionsEl.appendChild(item);
-  });
-  suggestionsEl.style.display = 'block';
-}
-
-/* allow Enter to add quickly */
-function onInputKeyDown(e){
-  if(e.key === 'Enter'){
-    e.preventDefault();
-    const v = inputEl.value.trim();
-    if(v) { addOrRefreshItem(v); inputEl.value=''; suggestionsEl.style.display='none'; }
-  } else if(e.key === 'ArrowDown'){
-    // no keyboard focus management for simplicity on mobile
-  }
-}
-
-/* escape HTML helper */
-function escapeHtml(s){
-  return String(s).replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
-}
-
-/* add button */
-document.getElementById('addBtn').addEventListener('click', ()=>{
-  const v = inputEl.value.trim();
-  if(!v) return;
-  addOrRefreshItem(v);
-  inputEl.value='';
-  suggestionsEl.style.display='none';
-});
-
-/* Export CSV:
-   For each item we produce: nazov_potraviny, pocet_dni_kedy_bola_jedena, pred_kolkymi_dnami_bola_prvy_raz_jedena
-   - pocet_dni_kedy_bola_jedena = number of distinct days in item.days
-   - pred_kolkymi... = floor((now - first)/MS_DAY)
-*/
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const data = loadData();
-  const rows = [['nazov_potraviny','pocet_dni_kedy_bola_jedena','pred_kolkymi_dnami_bola_prvy_raz_jedena']];
-  const now = Date.now();
-  const names = Object.keys(data).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
-  names.forEach(name=>{
-    const item = data[name];
-    const daysCount = (item.days && Array.isArray(item.days)) ? item.days.length : 0;
-    const daysAgoFirst = Math.floor((now - item.first) / MS_DAY);
-    // escape/quote CSV fields if needed
-    rows.push([name, String(daysCount), String(daysAgoFirst)]);
-  });
-  const csvContent = rows.map(r => r.map(field => {
-    if(String(field).includes(',') || String(field).includes('"')){
-      return `"${String(field).replace(/"/g,'""')}"`;
-    }
-    return field;
-  }).join(',')).join('\n');
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'foodtracker_export.csv';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
-});
-
-/* register service worker */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js').catch(()=>{/* ignore */});
-}
-
-/* initial render */
-renderAll();
-
-</script>
+    renderList();
+  </script>
 </body>
 </html>
-
-
