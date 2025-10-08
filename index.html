@@ -1,262 +1,316 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pestrosť stravy</title>
-<link rel="manifest" href="manifest.json" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pestrosť stravy 🌿</title>
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #faf8f6;
-    color: #2d2a26;
-    margin: 0;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  h1 { margin-bottom: 0.5rem; }
-  input {
-    padding: 0.5rem;
-    font-size: 1rem;
-    width: 90%;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    outline: none;
-  }
-  button {
-    margin-top: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 8px;
-    background-color: #6b705c;
-    color: white;
-    font-size: 1rem;
-  }
-  ul { list-style: none; padding: 0; width: 90%; }
-  li {
-    margin: 0.3rem 0;
-    padding: 0.5rem;
-    border-radius: 8px;
-    color: #fff;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .actions button {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  #suggestions {
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 90%;
-    position: absolute;
-    z-index: 10;
-  }
-  #suggestions div {
-    padding: 0.4rem;
-    cursor: pointer;
-  }
-  #suggestions div:hover {
-    background-color: #eee;
-  }
-  #statsSection {
-    display: none;
-    text-align: center;
-    width: 90%;
-  }
-  #exportBtn { margin-top: 1rem; }
-  nav {
-    margin: 1rem 0;
-    display: flex;
-    gap: 1rem;
-  }
-  nav button {
-    background-color: #a5a58d;
-  }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #faf9f6;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+header {
+  display: flex;
+  justify-content: space-around;
+  background: #f0ede6;
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc;
+}
+header button {
+  background: none;
+  border: none;
+  font-size: 1.1em;
+  cursor: pointer;
+}
+.active-tab {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 8px;
+  color: #fff;
+}
+button.item-btn {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+button#export {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background: #445533;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+}
+#tooltip {
+  background: #fff;
+  border: 1px solid #ccc;
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  z-index: 100;
+}
+#tooltip div {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+#tooltip div:hover {
+  background: #eee;
+}
+
+/* Štatistiky */
+#stats {
+  display: none;
+}
+.stats-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+canvas {
+  width: 100%;
+  height: 200px;
+}
 </style>
 </head>
 <body>
-  <h1>Pestrosť stravy</h1>
-  <nav>
-    <button id="showListBtn">🥕 Zoznam</button>
-    <button id="showStatsBtn">📊 Štatistiky</button>
-  </nav>
 
-  <section id="listSection">
-    <input id="foodInput" type="text" placeholder="Zadaj potravinu..." autocomplete="off" />
-    <div id="suggestions"></div>
-    <ul id="foodList"></ul>
-    <button id="exportBtn">📤 Export CSV</button>
-  </section>
+<header>
+  <button id="listTab" class="active-tab">📝 Zoznam</button>
+  <button id="statsTab">📊 Štatistiky</button>
+</header>
 
-  <section id="statsSection">
-    <h2>Štatistiky</h2>
-    <p>📅 Počet rôznych potravín (7 dní): <span id="uniqueCount">0</span></p>
-    <p>🔢 Shannonov index: <span id="shannonIndex">0.00</span></p>
-    <p><small>Vzorec: H = -Σ(pᵢ * ln(pᵢ)), kde pᵢ = podiel výskytu potraviny.<br>
-    Vyššie H znamená vyrovnanejšiu a pestrejšiu stravu.</small></p>
-  </section>
+<div class="container" id="list">
+  <input type="text" id="foodInput" placeholder="Zadaj potravinu..." autocomplete="off">
+  <div id="tooltip"></div>
+  <ul id="foodList"></ul>
+  <button id="export">⬇️ Export CSV</button>
+</div>
 
+<div class="container" id="stats">
+  <div class="stats-box">
+    <h3>🥦 Počet rôznych potravín za posledných 7 dní:</h3>
+    <p id="weekCount">0</p>
+  </div>
+  <div class="stats-box">
+    <h3>🌿 Celkový počet rôznych potravín:</h3>
+    <p id="totalCount">0</p>
+  </div>
+  <div class="stats-box">
+    <h3>📈 Kumulatívna pestrosť v čase:</h3>
+    <canvas id="diversityChart"></canvas>
+  </div>
+  <div class="stats-box">
+    <h3>🔢 Index pestrosti (Shannonov index)</h3>
+    <p id="diversityIndex"></p>
+    <p><small>Vzorec: <b>H = -Σ pᵢ ln(pᵢ)</b><br>
+    kde pᵢ je podiel dní, počas ktorých si jedol(a) danú potravinu.<br>
+    Vyšší H = väčšia rozmanitosť, nižší H = opakovanie rovnakých potravín.</small></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const foodInput = document.getElementById('foodInput');
-  const foodListEl = document.getElementById('foodList');
-  const suggestionsEl = document.getElementById('suggestions');
-  let foods = JSON.parse(localStorage.getItem('foods') || '[]');
+const input = document.getElementById('foodInput');
+const list = document.getElementById('foodList');
+const tooltip = document.getElementById('tooltip');
 
-  const dayMs = 24 * 60 * 60 * 1000;
-  const now = () => new Date().getTime();
+let foods = JSON.parse(localStorage.getItem('foods') || '{}');
+updateList();
 
-  function saveFoods() {
-    localStorage.setItem('foods', JSON.stringify(foods));
-  }
+// --- Prepínanie medzi záložkami ---
+const listTab = document.getElementById('listTab');
+const statsTab = document.getElementById('statsTab');
+const listDiv = document.getElementById('list');
+const statsDiv = document.getElementById('stats');
 
-  function getColor(days) {
-    const palette = ['#8bc34a','#c0ca33','#fbc02d','#ff9800','#f57c00','#e64a19','#7b1fa2','#888'];
-    if (days > 7) return palette[7];
-    return palette[days];
-  }
+listTab.onclick = () => {
+  listDiv.style.display = 'block';
+  statsDiv.style.display = 'none';
+  listTab.classList.add('active-tab');
+  statsTab.classList.remove('active-tab');
+};
+statsTab.onclick = () => {
+  updateStats();
+  listDiv.style.display = 'none';
+  statsDiv.style.display = 'block';
+  statsTab.classList.add('active-tab');
+  listTab.classList.remove('active-tab');
+};
 
-  function renderFoods() {
-    const listEl = document.getElementById('foodList');
-    listEl.innerHTML = '';
-    const nowT = now();
-    const active = [], expired = [];
+// --- Farby podľa veku ---
+function getColor(days) {
+  if (days > 7) return '#999';
+  const palette = ['#4B8B3B','#7E9B37','#B39F2C','#D68E27','#C4643C','#A34C4C','#80364B'];
+  return palette[days] || '#4B8B3B';
+}
 
-    foods.forEach(f => {
-      const diff = Math.floor((nowT - f.timestamp) / dayMs);
-      (diff <= 7 ? active : expired).push({...f, diff});
-    });
+// --- Zobrazenie zoznamu ---
+function updateList() {
+  const now = Date.now();
+  const items = Object.entries(foods);
+  const fresh = [];
+  const old = [];
 
-    active.sort((a,b)=>a.name.localeCompare(b.name));
-    expired.sort((a,b)=>a.name.localeCompare(b.name));
-    const sorted = [...active, ...expired];
+  items.forEach(([name, timestamps]) => {
+    timestamps = timestamps.filter(t => now - t < 365*24*3600*1000);
+    foods[name] = timestamps;
+    const last = Math.max(...timestamps);
+    const days = Math.floor((now - last) / (24*3600*1000));
+    if (days <= 7) fresh.push({name, days});
+    else old.push({name, days});
+  });
 
-    sorted.forEach(f => {
-      const li = document.createElement('li');
-      li.style.background = getColor(f.diff);
-      li.innerHTML = `
-        <span>${f.name}</span>
-        <span class="actions">
-          <button onclick="refreshItem('${f.name}')">✅</button>
-          <button onclick="deleteItem('${f.name}')">❌</button>
-        </span>
-      `;
-      listEl.appendChild(li);
-    });
+  fresh.sort((a,b)=>a.name.localeCompare(b.name));
+  old.sort((a,b)=>a.name.localeCompare(b.name));
 
-    saveFoods();
-  }
+  list.innerHTML = '';
+  [...fresh, ...old].forEach(item => {
+    const li = document.createElement('li');
+    li.style.background = getColor(item.days);
+    li.innerHTML = `<span>${item.name}</span>
+      <span>
+        <button class="item-btn" onclick="refreshItem('${item.name}')">✅</button>
+        <button class="item-btn" onclick="deleteItem('${item.name}')">❌</button>
+      </span>`;
+    list.appendChild(li);
+  });
+  localStorage.setItem('foods', JSON.stringify(foods));
+}
 
-  function addOrUpdateFood(name) {
-    name = name.trim().toLowerCase();
-    if (!name) return;
-    const existing = foods.find(f => f.name === name);
-    if (existing) {
-      existing.timestamp = now();
-    } else {
-      foods.push({ name, timestamp: now(), history: [now()] });
-    }
-    renderFoods();
-  }
+// --- Pridanie potraviny ---
+input.addEventListener('input', showTooltip);
+input.addEventListener('change', addFood);
+input.addEventListener('focus', showTooltip);
 
-  function refreshItem(name) {
-    const item = foods.find(f => f.name === name);
-    if (item) {
-      item.timestamp = now();
-      item.history.push(now());
-      renderFoods();
-    }
-  }
+function addFood() {
+  const name = input.value.trim().toLowerCase();
+  if (!name) return;
+  const now = Date.now();
+  if (!foods[name]) foods[name] = [];
+  foods[name] = foods[name].filter(t => now - t < 365*24*3600*1000);
+  foods[name].push(now);
+  input.value = '';
+  tooltip.style.display = 'none';
+  updateList();
+}
 
-  function deleteItem(name) {
-    foods = foods.filter(f => f.name !== name);
-    renderFoods();
-  }
-
-  foodInput.addEventListener('input', () => {
-    const val = foodInput.value.toLowerCase();
-    suggestionsEl.innerHTML = '';
-    if (!val) return;
-    const matches = foods.filter(f => f.name.startsWith(val));
-    matches.forEach(f => {
+function showTooltip() {
+  const val = input.value.toLowerCase();
+  tooltip.innerHTML = '';
+  if (!val) { tooltip.style.display = 'none'; return; }
+  const matches = Object.keys(foods).filter(k => k.startsWith(val));
+  if (matches.length > 0) {
+    tooltip.style.display = 'flex';
+    matches.forEach(m => {
       const div = document.createElement('div');
-      div.textContent = f.name;
-      div.onclick = () => {
-        addOrUpdateFood(f.name);
-        foodInput.value = '';
-        suggestionsEl.innerHTML = '';
-      };
-      suggestionsEl.appendChild(div);
+      div.textContent = m;
+      div.onclick = () => { input.value = m; tooltip.style.display='none'; };
+      tooltip.appendChild(div);
     });
-  });
+  } else tooltip.style.display = 'none';
+}
 
-  foodInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      addOrUpdateFood(foodInput.value);
-      foodInput.value = '';
-      suggestionsEl.innerHTML = '';
-    }
-  });
+function deleteItem(name) {
+  delete foods[name];
+  updateList();
+}
+function refreshItem(name) {
+  foods[name].push(Date.now());
+  updateList();
+}
 
-  // CSV export
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    const rows = [['nazov_potraviny','pocet_dni_kedy_bola_jedena','pred_kolkymi_dnami_bola_prvy_raz_jedena']];
-    const nowT = now();
-    foods.forEach(f => {
-      const uniqueDays = new Set(f.history.map(t => Math.floor(t / dayMs)));
-      const first = Math.min(...f.history);
-      const daysAgo = Math.floor((nowT - first) / dayMs);
-      rows.push([f.name, uniqueDays.size, daysAgo]);
-    });
-    const csv = rows.map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'pestrosť.csv';
-    a.click();
-  });
-
-  // Stats
-  function updateStats() {
-    const nowT = now();
-    const recent = foods.filter(f => (nowT - f.timestamp) / dayMs <= 7);
-    const total = recent.length;
-    const p = recent.map(_=>1/total);
-    const H = -p.reduce((s,pi)=>s+pi*Math.log(pi),0);
-    document.getElementById('uniqueCount').textContent = total;
-    document.getElementById('shannonIndex').textContent = H.toFixed(2);
+// --- Export CSV ---
+document.getElementById('export').onclick = () => {
+  const now = Date.now();
+  let csv = "nazov_potraviny,pocet_dni_kedy_bola_jedena,pred_kolkymi_dnami_bola_prvy_raz_jedena\n";
+  for (const [name, timestamps] of Object.entries(foods)) {
+    const days = new Set(timestamps.map(t => Math.floor(t/(24*3600*1000))));
+    const first = Math.min(...timestamps);
+    const ago = Math.floor((now - first)/(24*3600*1000));
+    csv += `${name},${days.size},${ago}\n`;
   }
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pestrost_stravy.csv';
+  a.click();
+};
 
-  // Tabs fix
-  const statsBtn = document.getElementById('showStatsBtn');
-  const listBtn = document.getElementById('showListBtn');
-  const statsSection = document.getElementById('statsSection');
-  const listSection = document.getElementById('listSection');
+// --- Štatistiky ---
+function updateStats() {
+  const now = Date.now();
+  const week = 7*24*3600*1000;
+  const allNames = Object.keys(foods);
 
-  statsBtn.addEventListener('click', () => {
-    const statsVisible = statsSection.style.display === 'block';
-    if (statsVisible) {
-      statsSection.style.display = 'none';
-      listSection.style.display = 'block';
-    } else {
-      statsSection.style.display = 'block';
-      listSection.style.display = 'none';
-      updateStats();
-    }
+  // Počet potravín za posledných 7 dní
+  const weekFoods = allNames.filter(n => foods[n].some(t => now - t < week));
+  document.getElementById('weekCount').textContent = weekFoods.length;
+
+  // Celkový počet potravín
+  document.getElementById('totalCount').textContent = allNames.length;
+
+  // Kumulatívny graf
+  const timestamps = [];
+  for (const t of Object.values(foods).flat()) timestamps.push(t);
+  timestamps.sort((a,b)=>a-b);
+  const days = {};
+  const unique = new Set();
+  timestamps.forEach(t => {
+    const day = Math.floor(t/(24*3600*1000));
+    unique.add(day + ':' + Object.keys(foods).find(n => foods[n].includes(t)));
+    days[day] = unique.size;
+  });
+  const x = Object.keys(days).map(d => parseInt(d));
+  const y = Object.values(days);
+
+  const ctx = document.getElementById('diversityChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: x.map(v => new Date(v*24*3600*1000).toLocaleDateString()), datasets: [{ data: y, borderColor: '#4B8B3B', fill: false }]},
+    options: { scales: { x: { ticks: { maxTicksLimit: 5 }}, y: { beginAtZero: true }}, plugins: { legend: { display: false } } }
   });
 
-  listBtn.addEventListener('click', () => {
-    statsSection.style.display = 'none';
-    listSection.style.display = 'block';
-  });
-
-  renderFoods();
+  // Shannonov index
+  const counts = Object.values(foods).map(ts => new Set(ts.map(t => Math.floor(t/(24*3600*1000)))).size);
+  const totalDays = counts.reduce((a,b)=>a+b,0);
+  const H = -counts.reduce((sum,c)=> {
+    const p = c/totalDays;
+    return sum + (p>0 ? p*Math.log(p) : 0);
+  },0);
+  document.getElementById('diversityIndex').textContent = H.toFixed(2);
+}
 </script>
 </body>
 </html>
