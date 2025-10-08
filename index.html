@@ -1,242 +1,316 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>7-Day Food Tracker</title>
-  <link rel="manifest" href="manifest.json" />
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      margin: 1.2em;
-      background: #f8f6f2;
-      color: #333;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pestrosť stravy 🌿</title>
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #faf9f6;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+header {
+  display: flex;
+  justify-content: space-around;
+  background: #f0ede6;
+  padding: 10px 0;
+  border-bottom: 1px solid #ccc;
+}
+header button {
+  background: none;
+  border: none;
+  font-size: 1.1em;
+  cursor: pointer;
+}
+.active-tab {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 8px;
+  color: #fff;
+}
+button.item-btn {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+button#export {
+  margin-top: 20px;
+  width: 100%;
+  padding: 10px;
+  background: #445533;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+}
+#tooltip {
+  background: #fff;
+  border: 1px solid #ccc;
+  position: absolute;
+  display: none;
+  flex-direction: column;
+  z-index: 100;
+}
+#tooltip div {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+#tooltip div:hover {
+  background: #eee;
+}
 
-    h1 {
-      text-align: center;
-      font-size: 1.5em;
-      margin-bottom: 1em;
-      color: #442f1f;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.6em;
-      font-size: 1em;
-      border: 2px solid #c7b89e;
-      border-radius: 8px;
-      outline: none;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 1em;
-    }
-
-    li {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.6em 0.8em;
-      border-radius: 8px;
-      margin-bottom: 0.5em;
-      color: #fff;
-    }
-
-    .item-buttons button {
-      background: none;
-      border: none;
-      font-size: 1.2em;
-      cursor: pointer;
-      color: #555;
-      margin-left: 0.4em;
-    }
-
-    .export-btn {
-      margin-top: 1.5em;
-      width: 100%;
-      padding: 0.8em;
-      font-size: 1em;
-      background: #806952;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .export-btn:hover {
-      background: #6a5742;
-    }
-
-    /* farebná paleta: jesenné tóny */
-    .day-0 { background-color: #557d4b; } /* zelená */
-    .day-1 { background-color: #7c8c3e; }
-    .day-2 { background-color: #a38e38; }
-    .day-3 { background-color: #bf843b; }
-    .day-4 { background-color: #c76d3b; }
-    .day-5 { background-color: #b6543d; }
-    .day-6 { background-color: #8c3b37; }
-    .day-7 { background-color: #733039; } /* bordová */
-    .old-item { background-color: #bfbfbf; color: #333; }
-
-    /* autocomplete dropdown */
-    .autocomplete-list {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      max-height: 150px;
-      overflow-y: auto;
-      margin-top: 0.2em;
-      position: absolute;
-      width: calc(100% - 2.4em);
-      z-index: 1000;
-    }
-
-    .autocomplete-item {
-      padding: 0.5em;
-      cursor: pointer;
-    }
-
-    .autocomplete-item:hover {
-      background: #eee;
-    }
-  </style>
+/* Štatistiky */
+#stats {
+  display: none;
+}
+.stats-box {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+canvas {
+  width: 100%;
+  height: 200px;
+}
+</style>
 </head>
 <body>
-  <h1>7-Day Food Tracker</h1>
-  <input id="foodInput" type="text" placeholder="Zadaj potravinu..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
-  <div id="autocomplete" class="autocomplete-list" style="display:none;"></div>
+
+<header>
+  <button id="listTab" class="active-tab">📝 Zoznam</button>
+  <button id="statsTab">📊 Štatistiky</button>
+</header>
+
+<div class="container" id="list">
+  <input type="text" id="foodInput" placeholder="Zadaj potravinu..." autocomplete="off">
+  <div id="tooltip"></div>
   <ul id="foodList"></ul>
-  <button id="exportBtn" class="export-btn">Export CSV</button>
+  <button id="export">⬇️ Export CSV</button>
+</div>
 
-  <script>
-    const input = document.getElementById('foodInput');
-    const list = document.getElementById('foodList');
-    const autocomplete = document.getElementById('autocomplete');
-    const exportBtn = document.getElementById('exportBtn');
-    const STORAGE_KEY = 'foodTrackerData';
+<div class="container" id="stats">
+  <div class="stats-box">
+    <h3>🥦 Počet rôznych potravín za posledných 7 dní:</h3>
+    <p id="weekCount">0</p>
+  </div>
+  <div class="stats-box">
+    <h3>🌿 Celkový počet rôznych potravín:</h3>
+    <p id="totalCount">0</p>
+  </div>
+  <div class="stats-box">
+    <h3>📈 Kumulatívna pestrosť v čase:</h3>
+    <canvas id="diversityChart"></canvas>
+  </div>
+  <div class="stats-box">
+    <h3>🔢 Index pestrosti (Shannonov index)</h3>
+    <p id="diversityIndex"></p>
+    <p><small>Vzorec: <b>H = -Σ pᵢ ln(pᵢ)</b><br>
+    kde pᵢ je podiel dní, počas ktorých si jedol(a) danú potravinu.<br>
+    Vyšší H = väčšia rozmanitosť, nižší H = opakovanie rovnakých potravín.</small></p>
+  </div>
+</div>
 
-    // fix pre iOS PWA klávesnicu
-    input.addEventListener('touchend', function(e) {
-      this.focus();
-      e.stopPropagation();
-    }, false);
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const input = document.getElementById('foodInput');
+const list = document.getElementById('foodList');
+const tooltip = document.getElementById('tooltip');
 
-    let foods = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+let foods = JSON.parse(localStorage.getItem('foods') || '{}');
+updateList();
 
-    function saveData() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(foods));
-    }
+// --- Prepínanie medzi záložkami ---
+const listTab = document.getElementById('listTab');
+const statsTab = document.getElementById('statsTab');
+const listDiv = document.getElementById('list');
+const statsDiv = document.getElementById('stats');
 
-    function addFood(name) {
-      const now = new Date().getTime();
-      if (foods[name]) {
-        foods[name].last = now;
-        foods[name].days.add(new Date().toDateString());
-      } else {
-        foods[name] = { first: now, last: now, days: new Set([new Date().toDateString()]) };
-      }
-      saveData();
-      renderList();
-    }
+listTab.onclick = () => {
+  listDiv.style.display = 'block';
+  statsDiv.style.display = 'none';
+  listTab.classList.add('active-tab');
+  statsTab.classList.remove('active-tab');
+};
+statsTab.onclick = () => {
+  updateStats();
+  listDiv.style.display = 'none';
+  statsDiv.style.display = 'block';
+  statsTab.classList.add('active-tab');
+  listTab.classList.remove('active-tab');
+};
 
-    function deleteFood(name) {
-      delete foods[name];
-      saveData();
-      renderList();
-    }
+// --- Farby podľa veku ---
+function getColor(days) {
+  if (days > 7) return '#999';
+  const palette = ['#4B8B3B','#7E9B37','#B39F2C','#D68E27','#C4643C','#A34C4C','#80364B'];
+  return palette[days] || '#4B8B3B';
+}
 
-    function refreshFood(name) {
-      foods[name].last = new Date().getTime();
-      foods[name].days.add(new Date().toDateString());
-      saveData();
-      renderList();
-    }
+// --- Zobrazenie zoznamu ---
+function updateList() {
+  const now = Date.now();
+  const items = Object.entries(foods);
+  const fresh = [];
+  const old = [];
 
-    function daysAgo(timestamp) {
-      return Math.floor((new Date().getTime() - timestamp) / (1000*60*60*24));
-    }
+  items.forEach(([name, timestamps]) => {
+    timestamps = timestamps.filter(t => now - t < 365*24*3600*1000);
+    foods[name] = timestamps;
+    const last = Math.max(...timestamps);
+    const days = Math.floor((now - last) / (24*3600*1000));
+    if (days <= 7) fresh.push({name, days});
+    else old.push({name, days});
+  });
 
-    function renderList() {
-      const entries = Object.entries(foods).map(([name, data]) => ({
-        name,
-        first: data.first,
-        last: data.last,
-        days: Array.from(data.days)
-      }));
+  fresh.sort((a,b)=>a.name.localeCompare(b.name));
+  old.sort((a,b)=>a.name.localeCompare(b.name));
 
-      const fresh = entries.filter(e => daysAgo(e.last) <= 7)
-        .sort((a,b)=>a.name.localeCompare(b.name));
-      const old = entries.filter(e => daysAgo(e.last) > 7)
-        .sort((a,b)=>a.name.localeCompare(b.name));
+  list.innerHTML = '';
+  [...fresh, ...old].forEach(item => {
+    const li = document.createElement('li');
+    li.style.background = getColor(item.days);
+    li.innerHTML = `<span>${item.name}</span>
+      <span>
+        <button class="item-btn" onclick="refreshItem('${item.name}')">✅</button>
+        <button class="item-btn" onclick="deleteItem('${item.name}')">❌</button>
+      </span>`;
+    list.appendChild(li);
+  });
+  localStorage.setItem('foods', JSON.stringify(foods));
+}
 
-      list.innerHTML = '';
+// --- Pridanie potraviny ---
+input.addEventListener('input', showTooltip);
+input.addEventListener('change', addFood);
+input.addEventListener('focus', showTooltip);
 
-      [...fresh, ...old].forEach(item => {
-        const diff = daysAgo(item.last);
-        const li = document.createElement('li');
-        li.className = diff <= 7 ? `day-${diff}` : 'old-item';
-        li.innerHTML = `
-          <span>${item.name}</span>
-          <span class="item-buttons">
-            <button onclick="refreshFood('${item.name}')">✅</button>
-            <button onclick="deleteFood('${item.name}')">❌</button>
-          </span>
-        `;
-        list.appendChild(li);
-      });
-    }
+function addFood() {
+  const name = input.value.trim().toLowerCase();
+  if (!name) return;
+  const now = Date.now();
+  if (!foods[name]) foods[name] = [];
+  foods[name] = foods[name].filter(t => now - t < 365*24*3600*1000);
+  foods[name].push(now);
+  input.value = '';
+  tooltip.style.display = 'none';
+  updateList();
+}
 
-    input.addEventListener('input', e => {
-      const val = e.target.value.toLowerCase();
-      if (!val) {
-        autocomplete.style.display = 'none';
-        return;
-      }
-      const matches = Object.keys(foods).filter(f => f.toLowerCase().startsWith(val));
-      if (matches.length === 0) {
-        autocomplete.style.display = 'none';
-      } else {
-        autocomplete.innerHTML = matches.map(m => `<div class="autocomplete-item">${m}</div>`).join('');
-        autocomplete.style.display = 'block';
-        document.querySelectorAll('.autocomplete-item').forEach(item => {
-          item.onclick = () => {
-            input.value = item.textContent;
-            autocomplete.style.display = 'none';
-            addFood(item.textContent);
-            input.value = '';
-          };
-        });
-      }
+function showTooltip() {
+  const val = input.value.toLowerCase();
+  tooltip.innerHTML = '';
+  if (!val) { tooltip.style.display = 'none'; return; }
+  const matches = Object.keys(foods).filter(k => k.startsWith(val));
+  if (matches.length > 0) {
+    tooltip.style.display = 'flex';
+    matches.forEach(m => {
+      const div = document.createElement('div');
+      div.textContent = m;
+      div.onclick = () => { input.value = m; tooltip.style.display='none'; };
+      tooltip.appendChild(div);
     });
+  } else tooltip.style.display = 'none';
+}
 
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && input.value.trim()) {
-        addFood(input.value.trim());
-        input.value = '';
-        autocomplete.style.display = 'none';
-      }
-    });
+function deleteItem(name) {
+  delete foods[name];
+  updateList();
+}
+function refreshItem(name) {
+  foods[name].push(Date.now());
+  updateList();
+}
 
-    exportBtn.addEventListener('click', () => {
-      const all = Object.entries(foods).map(([name, data]) => {
-        const totalDays = data.days.size;
-        const firstAgo = daysAgo(data.first);
-        return `${name},${totalDays},${firstAgo}`;
-      }).join('\n');
-      const csv = 'nazov_potraviny,pocet_dni_kedy_bola_jedena,pred_kolkymi_dnami_bola_prvy_raz_jedena\n' + all;
-      const blob = new Blob([csv], {type: 'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'foodtracker_export.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+// --- Export CSV ---
+document.getElementById('export').onclick = () => {
+  const now = Date.now();
+  let csv = "nazov_potraviny,pocet_dni_kedy_bola_jedena,pred_kolkymi_dnami_bola_prvy_raz_jedena\n";
+  for (const [name, timestamps] of Object.entries(foods)) {
+    const days = new Set(timestamps.map(t => Math.floor(t/(24*3600*1000))));
+    const first = Math.min(...timestamps);
+    const ago = Math.floor((now - first)/(24*3600*1000));
+    csv += `${name},${days.size},${ago}\n`;
+  }
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pestrost_stravy.csv';
+  a.click();
+};
 
-    renderList();
-  </script>
+// --- Štatistiky ---
+function updateStats() {
+  const now = Date.now();
+  const week = 7*24*3600*1000;
+  const allNames = Object.keys(foods);
+
+  // Počet potravín za posledných 7 dní
+  const weekFoods = allNames.filter(n => foods[n].some(t => now - t < week));
+  document.getElementById('weekCount').textContent = weekFoods.length;
+
+  // Celkový počet potravín
+  document.getElementById('totalCount').textContent = allNames.length;
+
+  // Kumulatívny graf
+  const timestamps = [];
+  for (const t of Object.values(foods).flat()) timestamps.push(t);
+  timestamps.sort((a,b)=>a-b);
+  const days = {};
+  const unique = new Set();
+  timestamps.forEach(t => {
+    const day = Math.floor(t/(24*3600*1000));
+    unique.add(day + ':' + Object.keys(foods).find(n => foods[n].includes(t)));
+    days[day] = unique.size;
+  });
+  const x = Object.keys(days).map(d => parseInt(d));
+  const y = Object.values(days);
+
+  const ctx = document.getElementById('diversityChart');
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: x.map(v => new Date(v*24*3600*1000).toLocaleDateString()), datasets: [{ data: y, borderColor: '#4B8B3B', fill: false }]},
+    options: { scales: { x: { ticks: { maxTicksLimit: 5 }}, y: { beginAtZero: true }}, plugins: { legend: { display: false } } }
+  });
+
+  // Shannonov index
+  const counts = Object.values(foods).map(ts => new Set(ts.map(t => Math.floor(t/(24*3600*1000)))).size);
+  const totalDays = counts.reduce((a,b)=>a+b,0);
+  const H = -counts.reduce((sum,c)=> {
+    const p = c/totalDays;
+    return sum + (p>0 ? p*Math.log(p) : 0);
+  },0);
+  document.getElementById('diversityIndex').textContent = H.toFixed(2);
+}
+</script>
 </body>
 </html>
